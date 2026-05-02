@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brädräknare Pro</title>
+<style>
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; margin: 0; padding: 16px; background: #f4f4f4; }
+    .container { max-width: 600px; margin: auto; background: white; padding: 16px; border-radius: 12px; box-shadow: 0 3px 12px rgba(0,0,0,0.1); }
+    h2 { margin-top: 0; }
+    label { display: block; margin-top: 12px; }
+    input { width: 100%; padding: 10px; margin-top: 5px; font-size: 16px; }
+    .checkbox { display: flex; align-items: center; margin-top: 12px; }
+    .checkbox input { width: auto; margin-right: 10px; }
+    .result { margin-top: 20px; font-size: 16px; }
+    .ok { color: green; font-weight: bold; font-size: 20px; text-decoration: underline; margin-bottom: 20px;}
+    .bad { color: red; }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Brädräknare Pro</h2>
+
+    <label>Total bredd (mm)</label>
+    <input type="number" id="totalWidth">
+
+    <label>Brädbredd (mm)</label>
+    <input type="number" id="boardWidth">
+
+    <label>Max mellanrum (mm)</label>
+    <input type="number" id="maxSpacing" value="20">
+
+    <div class="checkbox">
+        <input type="checkbox" id="outerSpacing">
+        <label for="outerSpacing">Mellanrum även på utsidor</label>
+    </div>
+
+    <div class="result" id="result">
+        Fyll i alla fält
+    </div>
+</div>
+
+<script>
+const inputs = document.querySelectorAll("input");
+inputs.forEach(input => input.addEventListener("input", calculate));
+
+function calculate() {
+    const totalWidth = parseFloat(document.getElementById("totalWidth").value);
+    const boardWidth = parseFloat(document.getElementById("boardWidth").value);
+    const maxSpacing = parseFloat(document.getElementById("maxSpacing").value);
+    const outer = document.getElementById("outerSpacing").checked;
+
+    if (!totalWidth || !boardWidth || !maxSpacing) {
+        document.getElementById("result").innerText = "Fyll i alla fält";
+        return;
+    }
+
+    let results = [];
+
+    for (let n = 1; n <= 20; n++) {
+        let gaps = outer ? (n + 1) : (n - 1);
+        if (gaps <= 0) continue;
+
+        let spacing = (totalWidth - (n * boardWidth)) / gaps;
+        if (spacing <= 0) continue;
+
+        results.push({ n, spacing });
+    }
+
+    if (results.length === 0) {
+        document.getElementById("result").innerText = "Inga rimliga alternativ";
+        return;
+    }
+
+    // sort so best (closest under max) is first
+    results.sort((a, b) => {
+        let aDiff = maxSpacing - a.spacing;
+        let bDiff = maxSpacing - b.spacing;
+        if (aDiff >= 0 && bDiff >= 0) return aDiff - bDiff;
+        if (aDiff >= 0) return -1;
+        if (bDiff >= 0) return 1;
+        return a.spacing - b.spacing;
+    });
+
+    let output = "";
+
+    results.forEach(r => {
+        let isOk = r.spacing <= maxSpacing;
+        let className = isOk ? "ok" : "bad";
+
+        output += `<div class="${className}">
+            Brädor: ${r.n} | Mellanrum: ${r.spacing.toFixed(1)} mm
+        </div>`;
+    });
+
+    document.getElementById("result").innerHTML = output;
+}
+</script>
+
+</body>
+</html>
