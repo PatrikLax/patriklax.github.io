@@ -59,7 +59,7 @@ function calculate() {
 
     let results = [];
 
-    for (let n = 1; n <= 20; n++) {
+    for (let n = 1; n <= Math.floor(totalWidth / boardWidth); n++) { 
         let gaps = outer ? (n + 1) : (n - 1);
         if (gaps <= 0) continue;
 
